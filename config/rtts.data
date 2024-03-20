@@ -1,0 +1,8 @@
+classes=5
+train=/home/gharatappeh/data/rtts/rtts.voc/rtts.voc.train
+test=/home/gharatappeh/data/rtts/rtts.voc/rtts.voc.all
+valid=/home/gharatappeh/data/rtts/rtts.voc/rtts.voc.valid
+all=/home/gharatappeh/data/rtts/all.txt
+names=/home/gharatappeh/data/rtts/rtts.names
+backup=backup/
+eval=rtts

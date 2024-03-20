@@ -1,0 +1,7 @@
+classes=20
+train=/home/gharatappeh/data/VOC/train.txt
+test=/home/gharatappeh/data/VOC/test.txt
+dest=/home/gharatappeh/data/vocfog
+names=/home/gharatappeh/data/VOC/voc.names
+backup=backup/
+eval=voc

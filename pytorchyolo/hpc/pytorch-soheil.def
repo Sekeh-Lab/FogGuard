@@ -1,0 +1,24 @@
+Bootstrap: docker
+From: nvcr.io/nvidia/pytorch:22.12-py3
+
+%post
+    # Downloads the latest package lists (important).
+    apt-get update -y && apt-get -y install python3 git wget
+    # Runs apt-get while ensuring that there are no user prompts that would
+    # cause the build process to hang.
+    # python3-tk is required by matplotlib.
+
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        coreutils  
+
+    pip install matplotlib
+    pip install pandas seaborn
+    pip install scikit-learn scikit-image tqdm graphviz pyglet h5py imgaug
+    pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
+    pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
+    pip install pytorch-lightning
+    pip install six
+    pip install pytil pytest pyparsing pytz python-libsbml
+
+
+    echo "Done"

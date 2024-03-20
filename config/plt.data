@@ -1,0 +1,7 @@
+classes=5
+train=/home/gharatappeh/data/VOC/plot
+test=/home/gharatappeh/data/VOC/plot
+valid=/home/gharatappeh/data/VOC/voc-rtts.valid
+names=/home/gharatappeh/data/VOC/voc-5-0.names
+backup=backup/
+eval=voc-rtts
