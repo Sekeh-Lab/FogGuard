@@ -1,6 +1,6 @@
 import os
 import torch
-import cv2
+# import cv2
 import time
 import numpy as np
 import pandas as pd
@@ -20,7 +20,7 @@ from util.loss import compute_loss
 import util.utils as utils
 import util.transforms as utransforms
 from test import _evaluate, evaluate_on_fog
-from util.parse_config import parse_data_config, parse_model_config
+# from util.parse_config import parse_data_config
 from util.augmentations import AUGMENTATION_TRANSFORMS
 from util.logger import Logger
 import util.datasets as ds
@@ -116,10 +116,10 @@ def train_teacher_one_epoch(model, loader, optimizer, device, epoch, logger):
         # outputs.append((epoch, image, reconstructed))
         logger_summary = [
             # ("teacher/loss", loss.detach().item())
-            ("teacher/loss/total", losses.avg), 
-            ("teacher/loss/box", lbox.avg), 
-            ("teacher/loss/obj", lobj.avg), 
-            ("teacher/loss/cls", lcls.avg), 
+            ("teacher/loss/total", losses.avg),
+            ("teacher/loss/box", lbox.avg),
+            ("teacher/loss/obj", lobj.avg),
+            ("teacher/loss/cls", lcls.avg),
             ]
         logger.list_of_scalars_summary(logger_summary,
                                        epoch * len(loader) + train_epoch)
@@ -129,7 +129,7 @@ def train_teacher_one_epoch(model, loader, optimizer, device, epoch, logger):
 
 def train_student_perc_loss_one_epoch(s_model, t_model, loader, optimizer,
                                       device, epoch, logger, batch_size,
-                                      stio_logger, lu_beta): 
+                                      stio_logger, lu_beta):
 
     # progress_bar = tqdm(loader, leave=True)
     t_activations = Activations(t_model, loader, device, batch_size)
@@ -157,6 +157,7 @@ def train_student_perc_loss_one_epoch(s_model, t_model, loader, optimizer,
 
         beta = torch.randint(lu_beta[0], lu_beta[1], (images.shape[0], )) / 100.
         beta = beta.to(device)
+        depth = depth.to(device)
         # for synthetic fog
         # hazy_batch = (utils.add_guassi_haze_batch(images, beta)).to(device)
 
@@ -231,6 +232,7 @@ def train_student_perc_loss_one_epoch(s_model, t_model, loader, optimizer,
 
     return losses.avg, lda.avg
 
+
 def evaluate_model(model, valid_dl, args, device, class_names, logger, epoch,
                    on_fog=False, beta=[0, 16]):
 
@@ -240,8 +242,9 @@ def evaluate_model(model, valid_dl, args, device, class_names, logger, epoch,
                                          class_names,
                                          model.hyperparams['height'],
                                          epoch, beta)
-        
     else:
+        import ipdb; ipdb.set_trace()
+
         metrics_output = _evaluate(model, valid_dl, device, class_names,
                                    img_size=model.hyperparams['height'],
                                    iou_thres=args.iou_thres,
@@ -260,17 +263,6 @@ def evaluate_model(model, valid_dl, args, device, class_names, logger, epoch,
         logger.list_of_scalars_summary(evaluation_metrics, epoch)
 
     return AP.mean()
-
-def save_best(model, m_type, best_map, cur_map):
-    print(f"current mAP: {cur_map:.3f}, best mAP: {best_map:.3f}")
-    checkpoint_path = f"checkpoints/{m_type}_{cur_map:.2f}_map_{cur_time}.pth"
-    old_ckpt = f"checkpoints/{m_type}_{best_map:.2f}_map_{cur_time}.pth"
-    print(f"---- Saving checkpoint to: '{checkpoint_path}' ----")
-    torch.save(model.state_dict(), checkpoint_path)
-    if os.path.exists(old_ckpt):
-        print(f"removing old file {old_ckpt}")
-        os.remove(old_ckpt)
-    return checkpoint_path
 
 def fine_tune(model, optimizer, train_dl, valid_dl, device, args, class_names,
               tb_logger):
@@ -308,7 +300,7 @@ def fine_tune(model, optimizer, train_dl, valid_dl, device, args, class_names,
 
         # Save model to checkpoint file
         if epoch % args.checkpoint_interval == 0 and cur_map - best_map > 0.01:
-            best_dir = save_best(model, f"{len(class_names)}_teacher",
+            best_dir = utils.save_best(model, f"{len(class_names)}_teacher",
                                  best_map, cur_map) 
             best_map = cur_map
 
@@ -365,7 +357,7 @@ def train_student(s_model, t_model, s_optimizer, t_optimizer, train_dl,
 
         # Save model to checkpoint file
         if epoch % args.checkpoint_interval == 0 and s_cur_map - best_s_map > 0.01:
-            best_model_dir = save_best(s_model, f"{len(class_names)}_student",
+            best_model_dir = utils.save_best(s_model, f"{len(class_names)}_student",
                                            best_s_map, s_cur_map)
 
             best_s_map = s_cur_map
@@ -379,27 +371,27 @@ def train_student(s_model, t_model, s_optimizer, t_optimizer, train_dl,
 
     return best_model_dir, best_s_map
 
+
 def evaluate_various_fog(model, valid_dl, args, device, class_names, logger):
     maps = [0] * 3
-    print(f"evaluate on [0, 5] fog")
+    print("evaluate on [0, 5] fog")
     maps[0] = evaluate_model(model, valid_dl, args, device, class_names, logger,
-                   epoch=0, on_fog=True, beta=[0, 5])
-    
-    print(f"evaluate on [5, 10] fog")
+                             epoch=0, on_fog=True, beta=[0, 5])
+    print("evaluate on [5, 10] fog")
     maps[1] = evaluate_model(model, valid_dl, args, device, class_names, logger,
-                   epoch=0, on_fog=True, beta=[5, 10])
-
-    print(f"evaluate on [10, 16] fog")
+                             epoch=0, on_fog=True, beta=[5, 10])
+    print("evaluate on [10, 16] fog")
     maps[2] = evaluate_model(model, valid_dl, args, device, class_names, logger,
-                   epoch=0, on_fog=True, beta=[10, 16])
+                             epoch=0, on_fog=True, beta=[10, 16])
     return maps
+
 
 def main():
     torch.manual_seed(10)
     args = utils.get_parsed_args()
     tb_logger = Logger(args.logdir)  # Tensorboard logger
     stio_logger = utils.setup_logger_dir(args)
-    data_config = parse_data_config(args.data)
+    data_config = utils.parse_data_config(args.data)
     class_names = utils.load_classes(data_config["names"])
     device = utils.get_device(args)
 
@@ -418,7 +410,7 @@ def main():
     train_ds = ds.yolo_dataset(data_config, "train", transform, image_size,
                                batch_size,
                                # num_samples,
-                              )
+                               )
 
     # train_dl = train_ds.create_dataloader()
     train_dl, valid_dl = train_ds.create_dataloader()
@@ -431,14 +423,14 @@ def main():
     test_dl = test_ds.create_dataloader()
 
     # laod rtts to only validate at the end
-    rtts_config = parse_data_config('../config/rtts.data')
+    rtts_config = utils.parse_data_config('config/rtts.data')
     rtts_ds = ds.yolo_dataset(rtts_config, "test", transform, image_size,
                               batch_size)
     rtts_dl = rtts_ds.create_dataloader()
 
-    voc_config = parse_data_config('../config/voc-5.data')
+    voc_config = utils.parse_data_config('config/voc-5.data')
     voc_ds = ds.yolo_dataset(voc_config, "test", transform, image_size,
-                              batch_size)
+                             batch_size)
     voc_dl = voc_ds.create_dataloader()
 
     t_optimizer = utils.set_optimizer(t_model)

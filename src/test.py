@@ -163,8 +163,9 @@ def evaluate_on_fog(model, dataloader, args, device, class_names, img_size,
         # hazy_batch = (utils.get_hazy_tensor(imgs)).to(device)
 
         imgs = imgs.to(device)
-        beta=torch.randint(lu_beta[0], lu_beta[1], (imgs.shape[0], )) / 100.
+        beta = torch.randint(lu_beta[0], lu_beta[1], (imgs.shape[0], )) / 100.
         beta = beta.to(device)
+        depth = depth.to(device)
         imgs = utils.add_real_haze_batch(imgs, depth, beta)
 
         targets = targets.to(device)

@@ -1,8 +1,5 @@
-classes=5
-train=/home/gharatappeh/data/rtts/rtts.voc/rtts.voc.train
-test=/home/gharatappeh/data/rtts/rtts.voc/rtts.voc.all
-valid=/home/gharatappeh/data/rtts/rtts.voc/rtts.voc.valid
-all=/home/gharatappeh/data/rtts/all.txt
-names=/home/gharatappeh/data/rtts/rtts.names
-backup=backup/
-eval=rtts
+train=/data/rtts/config/train.txt
+test=/data/rtts/config/test.txt
+valid=/data/rtts/config/valid.txt
+names=/data/rtts/config/rtts.names
+dataset=rtts

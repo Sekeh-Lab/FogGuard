@@ -22,12 +22,14 @@ from PIL import ImageFile
 # import transforms
 import util.transforms as utransforms
 from torchvision import transforms
+from torchvision.io import read_image
 # import utils as utils
 import util.utils as utils
 from util.logger import Logger
 # from logger import Logger
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 
 class yolo_dataset(Dataset):
     def __init__(self, data_config, data_type, transform=None, image_size=416,
@@ -41,7 +43,7 @@ class yolo_dataset(Dataset):
         self.batch_size = batch_size
         self.multiscale = False
         self.batch_count = 0
-        self.name = data_config["eval"]
+        self.name = data_config["dataset"]
         with open(self.image_dir_path, 'r') as f:
             self.img_files = f.readlines()
 
@@ -52,9 +54,9 @@ class yolo_dataset(Dataset):
         self.label_files = []
         for path in self.img_files:
             image_dir = os.path.dirname(path)
-            label_dir = f"labels-{len(self.classes)}".join(image_dir.rsplit("JPEGImages", 1))
+            label_dir = f"labels-{len(self.classes)}".join(image_dir.rsplit("images", 1))
             assert label_dir != image_dir, \
-                f"Image path must contain a folder named 'JPEGImages'! \n'{image_dir}'"
+                f"Image path must contain a folder named 'images'! \n'{image_dir}'"
             label_file = os.path.join(label_dir, os.path.basename(path))
             label_file = os.path.splitext(label_file)[0] + '.txt'
             self.label_files.append(label_file)
@@ -69,10 +71,14 @@ class yolo_dataset(Dataset):
             # load depth channel
             depth_parent = Path(Path(img_path).parents[1], "depth")
             image_name = img_path.split("/")[-1][:-4]
-            depth_fn = Path(depth_parent, image_name + '.pt')
+            # depth_fn = Path(depth_parent, image_name + '.pt')
+            depth_fn = Path(depth_parent, image_name + '.png')
             # depth = np.load(depth_fn)
-            # Image.fromarray(np.array(Image.open(depth_fn)).astype('uint16'))
-            depth = torch.load(depth_fn)
+            # depth = Image.fromarray(np.array(Image.open(depth_fn)).astype('uint16'))
+
+            # depth = Image.open(depth_fn)
+            depth = read_image(depth_fn)
+            # depth = torch.load(depth_fn)
 
         except Exception:
             print(f"Could not read image '{img_path}'.")
@@ -95,6 +101,7 @@ class yolo_dataset(Dataset):
         if self.transform:
             try:
                 img, bb_targets = self.transform((img, boxes))
+                depth = self.transform_depth(depth[0])
             except Exception:
                 print("Could not apply transform.")
                 return
@@ -128,10 +135,9 @@ class yolo_dataset(Dataset):
         depth = torch.stack([self.transform_depth(img) for img in depth])
         return paths, imgs, depth, bb_targets
 
-
     def __len__(self):
         return len(self.img_files)
-      
+
     def make_folders(self, path):
         """Create directory if not exists"""
         if not os.path.exists(path):
@@ -155,9 +161,9 @@ class yolo_dataset(Dataset):
                                                             [train_size, valid_size])
 
             if self.name == 'voc':
-                train_sampler = RandomSampler(train_ds, replacement=True, 
-                                            num_samples=int(train_ratio *\
-                                                            self.num_samples))
+                train_sampler = RandomSampler(train_ds, replacement=True,
+                                              num_samples=int(train_ratio *\
+                                                        self.num_samples))
 
                 valid_sampler = RandomSampler(valid_ds, replacement=True,
                                             num_samples=int((1 - train_ratio) *\
@@ -234,7 +240,7 @@ class yolo_dataset(Dataset):
             exit("Wrong dataset type")
  
     def transform_depth(self, img):
-        d_transform=transforms.Compose([
+        d_transform = transforms.Compose([
             SquarePadSize(self.img_size),
             # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         ])
@@ -244,11 +250,12 @@ class yolo_dataset(Dataset):
         img_trs = d_transform(img)
         return img_trs
  
+
 class SquarePadSize:
     def __init__(self, img_size):
         self.img_size = img_size
         "docstring"
-        
+
     def __call__(self, image):
         # print('before: ', image.min(), image.max())
         s = image.shape
@@ -269,6 +276,7 @@ class SquarePadSize:
         # p_right, p_bottom = [max_wh - (s+pad) for s, pad in zip(image.size, [p_left, p_top])]
         # padding = (p_left, p_top, p_right, p_bottom)
         # return F.pad(image, padding, 0, 'constant')
+
 
 def pad_to_square(img, pad_value=0):
     # c, h, w = img.shape

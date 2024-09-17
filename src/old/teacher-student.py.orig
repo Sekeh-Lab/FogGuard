@@ -24,7 +24,8 @@ import util.datasets as ds
 from activation import Activations
 from torchvision.models.feature_extraction import create_feature_extractor
 from torchvision.models.feature_extraction import get_graph_node_names
-
+from ultralytics.cfg import cfg2dict
+from types import SimpleNamespace
 
 def train_student_one_epoch(s_model, t_model, loader, optimizer, device, epoch,
                             activations, logger):

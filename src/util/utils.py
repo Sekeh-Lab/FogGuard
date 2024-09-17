@@ -17,12 +17,13 @@ import logging
 import os
 import constants as C
 import matplotlib.pyplot as plt
+home = str(Path.home())
 
 def get_parsed_args():
     print_environment_info()
     parser = argparse.ArgumentParser(description="Trains the YOLO model.")
     parser.add_argument("-m", "--model", type=str, default="config/yolov3.cfg", help="Path to model definition file (.cfg)")
-    parser.add_argument("-d", "--data", type=str, default="config/coco.data", help="Path to data config file (.data)")
+    parser.add_argument("-d", "--data", type=str, default="config/voc.data", help="Path to data config file (.data)")
     parser.add_argument("-e", "--epochs", type=int, default=40, help="Number of epochs")
     parser.add_argument("-fte", "--ft_epochs", type=int, default=40,
                         help="Number of epochs for fine tuning")
@@ -44,6 +45,7 @@ def get_parsed_args():
     print(f"Command line arguments: {args}")
     return args
 
+
 def parse_model_config(path):
     """Parses the yolo-v3 layer configuration file and returns module definitions"""
     file = open(path, 'r')
@@ -64,11 +66,10 @@ def parse_model_config(path):
 
     return module_defs
 
+
 def parse_data_config(path):
     """Parses the data configuration file"""
     options = dict()
-    options['gpus'] = '0,1,2,3'
-    options['num_workers'] = '10'
     with open(path, 'r') as fp:
         lines = fp.readlines()
 
@@ -77,8 +78,13 @@ def parse_data_config(path):
         if line == '' or line.startswith('#'):
             continue
         key, value = line.split('=')
-        options[key.strip()] = value.strip()
+
+        if "dataset" in key:
+            options[key.strip()] = value.strip()
+        else:
+            options[key.strip()] = home + value.strip()
     return options
+
 
 def setup_logger_dir(args):
     Path(C.RUN_DIR).mkdir(parents=True, exist_ok=True)
@@ -124,6 +130,18 @@ def set_optimizer(model):
     else:
         print("Unknown optimizer. Please choose between (adam, sgd).")
     return optimizer
+
+
+def save_best(model, m_type, best_map, cur_map):
+    print(f"current mAP: {cur_map:.3f}, best mAP: {best_map:.3f}")
+    checkpoint_path = f"{C.CHPT_DIR}{m_type}_{cur_map:.2f}_map_{C.cur_time}.pth"
+    old_ckpt = f"{C.CHPT_DIR}{m_type}_{best_map:.2f}_map_{C.cur_time}.pth"
+    print(f"---- Saving checkpoint to: '{checkpoint_path}' ----")
+    torch.save(model.state_dict(), checkpoint_path)
+    if os.path.exists(old_ckpt):
+        print(f"removing old file {old_ckpt}")
+        os.remove(old_ckpt)
+    return checkpoint_path
 
 def timer_func(func):
     # This function shows the execution time of 

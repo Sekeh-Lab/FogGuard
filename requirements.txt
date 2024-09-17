@@ -1,0 +1,15 @@
+torch
+torchvision
+torchaudio
+# opencv-contrib-python
+opencv-contrib-python-headless
+numpy==1.26
+pandas
+tqdm
+tensorboard
+matplotlib
+torchinfo
+imgaug
+ipdb
+timm
+terminaltables

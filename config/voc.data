@@ -1,7 +1,7 @@
 classes=20
-train=/home/gharatappeh/data/VOC/train.txt
-test=/home/gharatappeh/data/VOC/test.txt
-dest=/home/gharatappeh/data/vocfog
-names=/home/gharatappeh/data/VOC/voc.names
+train=/data/VOC/config/trainval.txt
+test=/data/VOC/config/test.txt
+dest=/data/vocfog
+names=/data/VOC/config/voc.names
 backup=backup/
-eval=voc
+dataset=voc

@@ -15,7 +15,9 @@ class ImgAug(object):
     def __call__(self, data):
         # Unpack data
         img, boxes = data
+        # img_dir, img, depth, boxes = data
 
+        # print(boxes[0].shape)
         # Convert xywh to xyxy
         boxes = np.array(boxes)
         boxes[:, 1:] = xywh2xyxy_np(boxes[:, 1:])
@@ -169,13 +171,8 @@ def simple_transform(image_size):
 
     SIMPLE_TRANSFORM = transforms.Compose(
         [
-            # transforms.ToImageTensor(),
-            # transforms.ConvertImageDtype(),
-
-            # transforms.ToTensor(),
             # transforms.Resize((image_size, image_size), antialias=True),
             # transforms.Normalize(mean=norm_mean, std=norm_std)
-
             AbsoluteLabels(),
             PadSquare(),
             # common_sequence(),

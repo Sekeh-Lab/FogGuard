@@ -14,6 +14,17 @@ class DefaultAug(ImgAug):
         ])
 
 
+class WeatherAug(ImgAug):
+    def __init__(self):
+        """ Weather related augmentations.
+        """
+        self.augmentatoins = iaa.Sequential([
+            # iaa.clouds(),
+            # iaa.Fog(),
+            iaa.Rain(speed=(0.1, 0.3)),
+        ])
+
+
 class StrongAug(ImgAug):
     def __init__(self, ):
         self.augmentations = iaa.Sequential([
@@ -27,9 +38,9 @@ class StrongAug(ImgAug):
 
 
 AUGMENTATION_TRANSFORMS = transforms.Compose([
-    AbsoluteLabels(),
+    # AbsoluteLabels(),
     DefaultAug(),
     PadSquare(),
-    RelativeLabels(),
+    # RelativeLabels(),
     ToTensor(),
 ])

@@ -1,21 +1,37 @@
 import cv2
 import torch
 import math
+import glob
 import urllib.request
 import os
 from util.parse_config import parse_data_config
-import util.transforms as utransforms
-from torchvision import utils
-import util.datasets as ds
-from tqdm import tqdm, trange
-import numpy as np
-from PIL import Image
-from os.path import expanduser
+import argparse
+
+# import util.transforms as utransforms
+# from torchvision import utils
+# import util.datasets as ds
+from tqdm import tqdm
+# import numpy as np
+# from PIL import Image
+# from os.path import expanduser
 from pathlib import Path
 # home = expanduser("~")
 home = str(Path.home())
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--data_config",
+                    default="../config/voc-5.data",
+                    help=".data file containing the config of dataset")
+
+parser.add_argument("--data_type",
+                    default="train", choices=["train", "test"])
+
+parser.add_argument("--directory",
+                    default="/home/soheil/data/VOC/train/VOCdevkit/VOC2012/images")
+
+flags = parser.parse_args()
 
 # url, filename = ("https://github.com/pytorch/hub/raw/master/images/dog.jpg", "dog.jpg")
 # urllib.request.urlretrieve(url, filename)
@@ -41,7 +57,7 @@ else:
 batch_size = 32
 image_size = 416
 
-data_config = parse_data_config('../config/voc-rtts.data')
+data_config = parse_data_config(flags.data_config)
 # simple_transform = utransforms.simple_transform(image_size)
 
 # train_ds = ds.yolo_dataset(data_config, "train", simple_transform, image_size=image_size,
@@ -58,9 +74,12 @@ data_config = parse_data_config('../config/voc-rtts.data')
 # input_batch = transform(img).to(device)
 # images_list_dir = data_config['test']
 # images_list_dir = data_config['train']
-images_list_dir = home + "/data/VOC/voc-rtts.train"
+images_list_dir = home + data_config[flags.data_type]
+print("Image list file", images_list_dir)
 with open(images_list_dir, 'r') as f:
     img_files = f.readlines()
+
+# img_files = glob.glob(flags.directory + '/*.jpg')
 
 psum, psum_sq, max_p, min_p = 0.0, 0.0, 0.0, 0.0
 
@@ -107,8 +126,8 @@ print(psum_sq)
 count = len(img_files)
 # mean and STD
 total_mean = psum / count
-total_var  = (psum_sq / count) - (total_mean ** 2)
-total_std  = math.sqrt(total_var)
+total_var = (psum_sq / count) - (total_mean ** 2)
+total_std = math.sqrt(total_var)
 print(total_mean)
 print(total_std)
 print(max_p)

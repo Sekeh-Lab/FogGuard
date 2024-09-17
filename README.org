@@ -1,0 +1,220 @@
+#+title: adverse weather
+* Setup
+** Data
+*** Download VOC
+Download VOC PASCAL training/validation and test data
+#+begin_src sh
+mkdir data && cd data
+mkdir train test
+cd train && wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar
+wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
+tar -xvf VOCtrainval_06-Nov-2007.tar && tar -xvf VOCtrainval_11-May-2012.tar
+cd VOCdevkit/VOC2007 && mv JPEGImages images
+cd ../VOC2012 && mv JPEGImages images
+cd ../../../test && wget http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar && tar -xvf VOCtest_06-Nov-2007.tar
+cd VOCdevkit/VOC2007 && mv JPEGImages images
+#+end_src
+
+Note that we need to move all the images from =JPEGImages= to =images= directory so
+that our dataloader is able to read them.
+
+The next step is to create the =label-5= directory, which is the =label= directory
+for 5 classes of objects we are interested in.
+
+*** Data config
+To create a YOLO-v3 compatible =image_directories=
+
+#+begin_src sh :results output
+cd ~/data/VOC
+mkdir config
+cd train/VOCdevkit/VOC2007/images/ && find . -name '*.jpg'  -printf $PWD/"%f\n" > ../../../../config/2007_train.txt
+cd ~/data/VOC/train/VOCdevkit/VOC2012/images/ && find . -name '*.jpg'  -printf $PWD/"%f\n" > ../../../../config/2012_train.txt
+cd ~/data/VOC/test/VOCdevkit/VOC2007/images/ && find . -name '*.jpg'  -printf $PWD/"%f\n" > ../../../../config/2007_test.txt
+#+end_src
+
+We can also use python to do the same thing.
+#+begin_src python :results output
+# create Ultralytics specific text file of training images
+file = open("train_images_roboflow.txt", "w") 
+for root, dirs, files in os.walk("."):
+    for filename in files:
+      # print("../train/images/" + filename)
+      if filename == "train_images_roboflow.txt":
+        pass
+      else:
+        file.write("../train/images/" + filename + "\n")
+file.close()
+#+end_src
+
+Alternatively, we can use =data_prep/annotaiton.py= to convert the annotation from
+=.xml= to =.txt= files and create a list of images directories.
+
+For VOC, we need to work on three different directories, =train/VOC2007=,
+=train/VOC2012=, and =test/VOC2007=.
+#+begin_src sh :results output :dir /ssh:lab:/home/soheil/gpu/adverse_weather/fog_guard/data_prep
+python annotation.py --labels_root=/home/soheil/data/VOC/train/VOCdevkit/VOC2012/ --annot_file=/home/soheil/data/VOC/config/voc2012_train.txt
+
+python annotation.py --labels_root=/home/soheil/data/VOC/train/VOCdevkit/VOC2007/ --annot_file=/home/soheil/data/VOC/config/voc2007_train.txt
+
+python annotation.py --labels_root=/home/soheil/data/VOC/test/VOCdevkit/VOC2007/ --annot_file=/home/soheil/data/VOC/config/voc2007_test.txt --data_type=test
+
+#+end_src
+
+#+RESULTS:
+: Classes:  ['bicycle', 'bus', 'car', 'motorbike', 'person']
+: Number of images:  11540
+: Classes:  ['bicycle', 'bus', 'car', 'motorbike', 'person']
+: Number of images:  5011
+: Classes:  ['bicycle', 'bus', 'car', 'motorbike', 'person']
+: Number of images:  4952
+
+When these image directories are created, we need to combine the two separate
+files corresponding to two VOC2007 and VOC2012 training sets.
+#+begin_src sh :results output :dir /ssh:lab:/home/soheil/data/VOC/config
+cat voc2007_train.txt > trainval.txt
+cat voc2012_train.txt >> trainval.txt
+cat voc2007_test.txt > test.txt
+#+end_src
+
+#+RESULTS:
+
+In order to have a complete set of data config file, we need to find the address
+of the set of names of classes included in our dataset. This file looks like
+this for 5 classes that are included RTTS. 
+
+#+begin_src conf
+bicycle
+bus
+car
+motorbike
+person
+#+end_src
+
+and the config file name =voc-5.data= is created as follows:
+#+begin_src conf
+classes=5
+train=/home/gharatappeh/data/VOC/config/trainval.txt
+test=/home/gharatappeh/data/VOC/config/test.txt
+valid=/home/gharatappeh/data/VOC/config/valid.txt
+names=/home/gharatappeh/data/VOC/voc-5.names
+backup=backup/
+eval=voc
+#+end_src
+
+[[https://github.com/JPM-Tech/Object-Detection/blob/main/Scripts/converters/convert-yolo-to-xml.py][Link to a format converter]]
+
+**** TODO Change the absolute path to relative
+
+*** Download RTTS
+#+begin_src sh :results output
+curl -L "https://universe.roboflow.com/ds/Sl3Ca2vEqU?key=9mEONY8wgd" > roboflow.zip; unzip roboflow.zip; rm roboflow.zip
+#+end_src
+
+We put all of the dataset within =images= and =labels= folders.
+#+begin_src sh :results output
+mkdir train/images train/labels-5 test/images test/labels-5 valid/images valid/labels-5
+cd train && mv *.jpg images/ && mv *.xml labels-5/
+cd ../test && mv *.jpg images/ && mv *.xml labels-5/
+cd ../valid && mv *.jpg images/ && mv *.xml labels-5/
+#+end_src
+Note that there is a =-5= in label's directories name, which is the number of
+categories included in the dataset. This is to make a consistent folder
+structure such that our =dataloader= can read labels according to the number of
+categories involved in the project, consistently.
+
+We need to combine the training and validation image directories.
+#+begin_src sh :results output
+cat train.txt > trainval.txt
+cat valid.txt >> trainval.txt
+#+end_src
+
+Now, we need to turn the  =.xml= files into =.txt= annotation files.
+#+begin_src sh :results output :dir /ssh:lab:/home/soheil/gpu/adverse_weather/fog_guard/data_prep
+python annotation.py --labels_root=/home/soheil/data/rtts --annot_file=/home/soheil/data/rtts/config/rtts_train.txt --data_type=train --dataset_name=rtts
+
+python annotation.py --labels_root=/home/soheil/data/rtts --annot_file=/home/soheil/data/rtts/config/rtts_test.txt --data_type=test --dataset_name=rtts
+
+
+python annotation.py --labels_root=/home/soheil/data/rtts --annot_file=/home/soheil/data/rtts/config/rtts_valid.txt --data_type=valid --dataset_name=rtts
+
+#+end_src
+
+and, we combine the train and validation to create trainval
+#+begin_src sh :results output
+cat rtts_train.txt > trainval.txt
+cat rtts_valid.txt >> trainval.txt
+#+end_src
+*** Model config
+We need to adjust the model configurations to the number of classes in our
+training process.
+#+begin_src sh :results output
+config/create_custom_model.sh [number_of_classes]
+#+end_src
+
+*** IA-YOLO format
+Then, we need to create the =voc_train.txt= and =voc_test.txt= files that contain
+the location of train and test set files along with a sequence of 5 values
+arrays that are the location of the objects, with the following format:
+#+begin_src conf
+image_path x_min, y_min, x_max, y_max, class_id  x_min, y_min ,..., class_id 
+#+end_src
+
+#+begin_src sh
+python data_prep/voc_annotation.py --data_path=/home/soheil/data
+#+end_src
+The files are created in =./data/dataset/voc_train.txt=.
+
+#+begin_src sh
+paste <(awk "{print \"$PWD\"}" <5k.part) 5k.part | tr -d '\t' > 5k.txt
+paste <(awk "{print \"$PWD\"}" <trainvalno5k.part) trainvalno5k.part | tr -d '\t' > trainvalno5k.txt
+#+end_src
+
+*** Create depth images
+#+begin_src sh :results output
+# voc
+python depth.py --data_config=../config/voc-5.data --data_type=train
+python depth.py --data_config=../config/voc-5.data --data_type=test
+
+# rtts
+python depth.py --data_config=../config/rtts.data --data_type=train
+python depth.py --data_config=../config/rtts.data --data_type=test
+#+end_src
+
+*** Create your own dataset
+- [[https://medium.com/red-buffer/converting-a-custom-dataset-from-coco-format-to-yolo-format-6d98a4fd43fc][Creating custom YOLO compatible dataset]]
+ 
+After saving the dataset onto our disks, we should take care of the data
+annotation. The Yolo network accepts a specific format of data. The =dataset=
+class expects to see a =labels/= folder and a =images/= folder in the data
+directory. Using this directories, it reads all the images alongside with their
+labels and load it to the =dataset= object.
+
+Now, let's first annotate the data in a Yolo format, and then use the output
+files (=vocfog_train= and =vocfog_test= in this case) to create the =.txt= labels.
+
+#+begin_src sh
+python voc_annotation.py --data_path=/home/soheil/data/VOC --train_annotation=/home/soheil/data/data_vocfog/vocfog_train --test_annotation=/home/soheil/data/data_vocfog/vocfog_test
+#+end_src
+
+Now, we create the individual =.txt= files.
+#+begin_src sh
+python data_make.py --train_path=data_vocfog/vocfog_train --test_path=data_vocfog/vocfog_test
+#+end_src
+
+Now, we have to create a =dataset= object with them.
+
+*** Visualizing with tensorboard
+#+begin_src sh
+tensorboard --logdir="./logs" --port 6006
+#+end_src
+
+* Train FogGuard
+
+#+begin_src sh :dir /ssh:lab:/home/soheil/gpu/adverse_weather/fog_guard :results output
+sbatch hpc/lab.slurm src/teacher-student.py --data=config/voc-5.data --model=config/yolov3-rtts.cfg -e 300 -fte 300 --t_pretrained_weights=weights/yolov3.weights --s_pretrained_weights=weights/yolov3.weights
+#+end_src
+
+#+RESULTS:
+: Submitted batch job 40
+
+* Evaluate FogGuard
