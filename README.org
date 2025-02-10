@@ -1,5 +1,4 @@
 #+title: Object Detection Under Adverse Weather Condition
-*  FogGuard: A Fog-Aware Object Detection Network
 
 This repository contains the source code for the FogGuard project, a novel fog-aware object detection network developed to address the challenges posed by foggy weather conditions. Autonomous driving systems heavily rely on accurate object detection algorithms, but adverse weather conditions can significantly affect the reliability of deep neural networks (DNNs).
 
