@@ -1,5 +1,23 @@
 #+title: adverse weather
-* Setup
+*  FogGuard: A Fog-Aware Object Detection Network
+
+This repository contains the source code for the FogGuard project, a novel fog-aware object detection network developed to address the challenges posed by foggy weather conditions. Autonomous driving systems heavily rely on accurate object detection algorithms, but adverse weather conditions can significantly affect the reliability of deep neural networks (DNNs).
+
+** Abstract
+
+In this paper [[https://arxiv.org/abs/2403.08939][ArXiv link]], we present FogGuard, a novel fog-aware object detection network designed to address the challenges posed by foggy weather conditions. Existing approaches include image enhancement techniques like IA-YOLO and domain adaptation methods. Our approach involves fine-tuning on a specific dataset to efficiently address these challenges.
+
+FogGuard compensates for foggy conditions in the scene by incorporating YOLOv3 as the baseline algorithm and introducing a unique Teacher-Student Perceptual loss for accurate object detection in foggy environments. Through comprehensive evaluations on standard datasets like PASCAL VOC and RTTS, our network significantly improves performance, achieving a 69.43% mAP compared to YOLOv3's 57.78% on the RTTS dataset. Additionally, our training method slightly increases time complexity but does not add overhead during inference compared to the regular YOLO network.
+
+* Installation
+
+To use the FogGuard object detection network, follow these steps:
+
+1. Clone this repository to your local machine.
+2. Install the necessary dependencies and libraries.
+3. Prepare the data in the mentioned format (check out the Data section)
+4. Run the FogGuard network on your desired dataset for fog-aware object detection.
+
 ** Data
 *** Download VOC
 Download VOC PASCAL training/validation and test data
