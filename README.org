@@ -23,6 +23,22 @@ significantly improves performance, achieving a 69.43% mAP compared to YOLOv3's
 time complexity but does not add overhead during inference compared to the
 regular YOLO network.
 
+** Citation
+To cite the paper, please use the following bibtex entry:
+#+begin_src conf
+@inproceedings{Gharatappeh2025FogGuard,
+  title = {FogGuard: Guarding YOLO Against Fog Using Perceptual Loss},
+  ISBN = {9783031926082},
+  ISSN = {2367-3389},
+  url = {http://dx.doi.org/10.1007/978-3-031-92608-2_10},
+  DOI = {10.1007/978-3-031-92608-2_10},
+  booktitle = {Intelligent Computing},
+  publisher = {Springer Nature Switzerland},
+  author = {Gharatappeh,  Soheil and Neshatfar,  Sepideh and Sekeh,  Salimeh Yasaei and Dhiman,  Vikas},
+  year = {2025},
+  pages = {135–150}
+}
+#+end_src
 * Installation
 
 To use the FogGuard object detection network, follow these steps:
@@ -250,19 +266,3 @@ sbatch hpc/lab.slurm src/teacher-student.py --data=config/voc-5.data --model=con
 : Submitted batch job 40
 
 * Evaluate FogGuard
-* Abstract
-To cite the paper, please use the following bibtex entry:
-#+begin_src conf
-@inproceedings{Gharatappeh2025FogGuard,
-  title = {FogGuard: Guarding YOLO Against Fog Using Perceptual Loss},
-  ISBN = {9783031926082},
-  ISSN = {2367-3389},
-  url = {http://dx.doi.org/10.1007/978-3-031-92608-2_10},
-  DOI = {10.1007/978-3-031-92608-2_10},
-  booktitle = {Intelligent Computing},
-  publisher = {Springer Nature Switzerland},
-  author = {Gharatappeh,  Soheil and Neshatfar,  Sepideh and Sekeh,  Salimeh Yasaei and Dhiman,  Vikas},
-  year = {2025},
-  pages = {135–150}
-}
-#+end_src
