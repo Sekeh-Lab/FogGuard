@@ -1,6 +1,6 @@
 #+title: Object Detection Under Adverse Weather Condition
 
-This repository contains the source code for the [[http://dx.doi.org/10.1007/978-3-031-92608-2_10][FogGuard]], a novel
+This repository contains the source code for [[http://dx.doi.org/10.1007/978-3-031-92608-2_10][FogGuard]], a novel
 fog-aware object detection network developed to address the challenges posed by
 foggy weather conditions. Autonomous driving systems heavily rely on accurate
 object detection algorithms, but adverse weather conditions can significantly
@@ -8,12 +8,11 @@ affect the reliability of deep neural networks (DNNs).
 
 
 * Abstract
-
-In this paper we present FogGuard, a novel fog-aware object
-detection network designed to address the challenges posed by foggy weather
-conditions. Existing approaches include image enhancement techniques like
-IA-YOLO and domain adaptation methods. Our approach involves fine-tuning on a
-specific dataset to efficiently address these challenges.
+In this paper we present FogGuard, a novel fog-aware object detection network
+designed to address the challenges posed by foggy weather conditions. Existing
+approaches include image enhancement techniques like IA-YOLO and domain
+adaptation methods. Our approach involves fine-tuning on a specific dataset to
+efficiently address these challenges.
 
 FogGuard compensates for foggy conditions in the scene by incorporating YOLOv3
 as the baseline algorithm and introducing a unique Teacher-Student Perceptual
@@ -23,7 +22,6 @@ significantly improves performance, achieving a 69.43% mAP compared to YOLOv3's
 57.78% on the RTTS dataset. Additionally, our training method slightly increases
 time complexity but does not add overhead during inference compared to the
 regular YOLO network.
-
 
 * Installation
 
@@ -252,7 +250,6 @@ sbatch hpc/lab.slurm src/teacher-student.py --data=config/voc-5.data --model=con
 : Submitted batch job 40
 
 * Evaluate FogGuard
-
 * Abstract
 To cite the paper, please use the following bibtex entry:
 #+begin_src conf
